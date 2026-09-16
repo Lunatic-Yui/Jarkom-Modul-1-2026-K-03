@@ -1,0 +1,41 @@
+apk add --no-cache shadow vsftpd
+# ini buat lftpnya
+
+adduser -D alice
+adduser -D mika
+adduser -D eiri
+# membuat user
+
+echo "alice:licea123#" | chpasswd
+echo "mika:ikam123#" | chpasswd
+echo "eiri:riei123#" | chpasswd
+#pw buat nanti ftpnya
+
+usermod -d /var/wired/data alice
+usermod -d /var/wired/data mika
+usermod -d /var/wired/data eiri
+# list untuk modifikasi usernya
+
+mkdir -p /var/wired/data
+chown alice:alice /var/wired/data #ini membuat si alice punya izin read and write
+chmod 755 /var/wired/data #ini chmod buat bisa nulis, read. Informasinya saya dapat dari [warp.dev - chmod 755](https://www.warp.dev/terminus/chmod-755)
+
+mkdir -p /etc/vsftpd/user_conf
+cat > /etc/vsftpd/vsftpd.conf << 'EOF'
+local_enable=YES
+write_enable=YES
+chroot_local_user=YES
+allow_writeable_chroot=YES
+userlist_enable=YES 
+userlist_file=/etc/vsftpd.userlist
+userlist_deny=YES #ini buat deny
+user_config_dir=/etc/vsftpd/user_conf 
+seccomp_sandbox=NO
+file_open_mode=0644
+EOF
+# configurasi vsftpdnya. Beberapa: dia bisa nulis di local, bisa nulist, bisa chroot local dan write dan juga buat deny case: Eiri
+
+echo "eiri" > /etc/vsftpd.userlist #memasukkan ke daftar user. Tidak bisa membaca maupun mengunduhnya. Jadi sekali 'ls' dia gk bisa
+echo "write_enable=NO" > /etc/vsftpd/user_conf/mika #ini membuat agar si mika hanya bisa membaca aja
+
+vsftpd /etc/vsftpd/vsftpd.conf & #ini buat menjalankan confignya tersebut
