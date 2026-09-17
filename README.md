@@ -4,8 +4,8 @@
 
 | Nama                      | NRP        |
 | ------------------------- | ---------- |
-| ...       | ... |
-| ...  | ... |
+| Yovi Prayudya Rizky Ramadhani      | 5027251129 |
+| Dafa Ridho Zhafif  | 5027251129 |
 
 ## Laporan
 
@@ -72,13 +72,16 @@ iface eth0 inet static
     gateway 10.65.2.1
     up echo 'nameserver 8.8.8.8' > /etc/resolv.conf
 ```
-(ini contoh chisa) dengan ip addressnya adalah 10.65.2.2. Nah prefix awalnya kan `10.65.x.x` nah x pertama adalah switch yang dipasang. Jika dalam sebuah topologi dengan jumlah switch yang dipasang adalah n maka x pertama berisi n sesuai dengan switch yang terhubung. Contoh kasusnya si Chisa, karena si Chisa dalam soal adalah router 2 maka otomatis prefix ipnya adalah 2. Nah gateway ini buat apa, gateway adalah "gerbangnya" dia menerima sebuah paket. Misal kita ping google.com, otomatis membutuhkan "gateway" agar paket informasinya diterima seperti itu. untuk `echo 'nameserver 8.8.8.8' > /etc/resolv.conf'` adalah untuk menyetting configurasi agar dia bisa terhubung ke router dan bisa mengeping `google.com`. Resultnya akan ditunjukkan soal no berikutnya
+(ini contoh chisa) dengan ip addressnya adalah 10.65.2.2. Nah prefix awalnya kan `10.65.x.x` nah x pertama adalah switch yang dipasang. Jika dalam sebuah topologi dengan jumlah switch yang dipasang adalah n maka x pertama berisi n sesuai dengan switch yang terhubung. Contoh kasusnya si Chisa, karena si Chisa dalam soal adalah router 2 maka otomatis prefix ipnya adalah 2. Nah gateway ini buat apa, gateway adalah "gerbangnya" dia menerima sebuah paket. Misal kita ping google.com, otomatis membutuhkan "gateway" agar paket informasinya diterima seperti itu. untuk `echo 'nameserver 8.8.8.8' > /etc/resolv.conf'` adalah untuk menyetting configurasi agar dia bisa terhubung ke router dan bisa mengeping `google.com`.
+Sebelum kirim result, agar bisa memastikan berkomunikasi satu sama lain bisa melakukan `ping -c3 10.65.x.n` dengan x adalah router berapa dan n adalah client berapa. Chisa: 10.65.2.2, alice 10.65.1.2, mika 10.65.1.3, knights 10.65.3.2, dan Eiri 10.65.3.3 (tambahan). Resultnya akan ditunjukkan soal no berikutnya
 
 4. Lain ingin agar setiap Entitas (Client) memiliki kemandirian di The Wired. Konfigurasikan firewall/iptables (NAT Masquerade) dan DNS resolver agar setiap Client dapat terhubung ke internet secara mandiri (dapat melakukan ping ke 8.8.8.8 dan membuka domain web google.com).
 
 Seperti penjelasan sebelumnya, firewall / iptables yang dibutuhkan adalah pada routernya yaitu `up iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE`. Ini ibarat kata adalah firewall. Saya mengambil informasinya dari [debian-handbook](https://debian-handbook.info/browse/id-ID/stable/sect.firewall-packet-filtering.html) dan [modul-1](https://github.com/lab-kcks/modul-komdat-jarkom-2026/tree/main/Modul%201#274-konfigurasi-source-nat-iptables-masquerade) bahwa tiap client kan memiliki ip private (yaitu 10.65.x.x) maka dengan adanya `up iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE` ketika kita meneruskan paketnya keluar, ip yang private ini akan disamarkan oleh si `eth0` tersebut menuju ke internet. Hasilnya adalah seperti berikut
 
 ![image](./assets/result-no4.png)
+
+Nah agar bisa berhasil, bisa melakukan command `ping -c3 8.8.8.8` atau `ping -c3 google.com`
 
 5. Eiri tetap berupaya menanamkan kekacauan ke dalam jaringan. Untuk mengantisipasi restart tiba-tiba, pastikan seluruh konfigurasi jaringan tidak hilang saat semua node di-restart. Buat script verifikasi di /root/cek_status.sh pada router Lain yang menampilkan ringkasan interface (ip -br a) dan status tabel NAT (iptables -t nat -L -v -n) setelah reboot.
 
@@ -612,3 +615,10 @@ yaitu methodnya adalah `HEAD`
 Result:
 
 ![image](./assets/ctf-20/result.png)
+
+## Source
+
+[soal-7](./src/src-code/soal-7/)
+[soal-11](./src/src-code/soal-11/)
+[soal-12](./src/src-code/soal-12/)
+[soal-13](./src/src-code/soal-13/)
