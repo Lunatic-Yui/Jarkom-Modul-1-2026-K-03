@@ -7,6 +7,8 @@
 | Yovi Prayudya Rizky Ramadhani       | 5027251107 |
 | Dafa Ridho Zhafif  | 5027251129 |
 
+untuk teman saya atas nama: Dafa Ridho Zhafif tidak mengerjakan sama sekali. Saya sudah mengontak di discordnya terus meminta tolong circlenya katanya bakal di wa namun sampai saat saya selesai mengerjakan ini tidak ada wa sama sekali. Jadi saya mengerjakan semua ini sendiri
+
 ## Laporan
 
 1. Untuk mempersiapkan pembangunan The Wired, Lain yang berperan sebagai Router membuat tiga Switch/Gateway: Switch 1 menuju dua Entitas yaitu Alice dan Mika, Switch 2 menuju Chisa, sedangkan Switch 3 menuju Knights dan Eiri. Kelima Entitas tersebut dikonfigurasi sebagai Client di GNS3. [GUNAKAN PREFIX IP MASING-MASING KELOMPOK]
@@ -157,9 +159,27 @@ alice
 
 ![image](./assets/user-alice-7.png)
 
-mika
+Eiri
 
-![image]()
+![image](./assets/eiri-result-no7.png)
+
+dan untuk mika akan diproofkan pada no 9
 
 8. Kelompok rahasia Knights perlu mengirimkan dokumen laporan intelijen ke FTP Server Chisa. Lakukan koneksi FTP client dari node Knights ke FTP Server Chisa menggunakan akun alice. Upload file berikut ([link file](https://drive.google.com/drive/folders/1tvZpueSH9E3GWwXM6KNnM64Y5wNoIAYP)). Analisis sesi Wireshark dan sebutkan: perintah FTP untuk upload (STOR), kode status sukses server (226), dan port data TCP yang dinegosiasikan pada mode PASV.
+
+Untuk result no 8 gambarnya sepert ini
+
+![image](./assets/result-pcap-8.png)
+
+Dan untuk pcapnya sendiri: [result-8.pcap](./artefak-pcap/result-8.pcapng)
+
+nah perintah ftp untuk uploadnya adalah STOR dari section no 60 dengan response `entering passive mode`. Lalu terdapat request pada no 67 terdapat request argumentnya `knights_report.txt` dan request commandnya `STOR`. Lalu pada frame / no 71 terdapat response `FTP data` sebesar 1111 bytes. 
+
+9. Mika mengakses dokumen Protokol Tujuh di ([link file](https://drive.google.com/drive/folders/1S3hG0dnZBTkCta4uILWwKVc6dSYYGRJ6)) dari FTP Server Chisa. Dari node Mika, unduh file tersebut menggunakan akun mika. Setelah itu, buktikan pembatasan read-only dengan mencoba mengunggah file baru dari akun mika, dan tunjukkan pesan error respon server (error 550 Permission denied) saat mika mencoba melakukan upload
+
+Untuk proof no 7 dan 9 pada akun mika seperti ini
+
+sebelum kita lftp pakai akun mika di node mika
+
+![image](./assets/isi_manifesto.png)
 
