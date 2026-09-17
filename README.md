@@ -4,8 +4,8 @@
 
 | Nama                      | NRP        |
 | ------------------------- | ---------- |
-| Yovi Prayudya Rizky Ramadhani       | 5027251107 |
-| Dafa Ridho Zhafif  | 5027251129 |
+| ...       | ... |
+| ...  | ... |
 
 ## Laporan
 
@@ -59,7 +59,7 @@ iface eth3 inet static
    netmask 255.255.255.0
 ```
 
-Yang mana untuk auto ethn dengan inet static adalah untuk membuatnya dia static dengan ip address yang sudah di prefix yaitu `10.65.3.1`. Karena ada 3 router maka masing-masing router diset ke 1 misal
+Yang mana untuk auto ethn dengan inet static adalah untuk membuatnya dia static dengan ip address yang sudah di prefix yaitu `10.65.3.1`. Karena ada 3 switch maka masing-masing switch diset ke 1 misal
 
 router 1: ip addressnya adalah 10.65.1.1 -> ini untuk konfigurasi router pertama. Begitupun selanjutnya sampai ke router 3. Selanjutnya untuk client (alice, chisa, mika, knights, dan eiri), konfigurasinya adalah seperti berikut
 
@@ -223,7 +223,7 @@ nah untuk hasil dari wiresharknya:
 
 ![image](./assets/result-pw-11.png)
 
-Kelemahan dari telnet itu sendiri adalah pada saat kita memasukkan akun: phantom_user dengan pwnya: `ada_seorang_pria_lokal_menikahi_pohon_saw17` maka ketika kita pasang capture tersebut dan menghubungkan ke wiresharknya, semua aktivitas seperti akun dan passwordnya itu terpampang jelas tanpa adanya enkripsi yang bisa menyamarkan kredensial ini sehingga seseorang bisa memanfaatkan hal ini dan langsung mengambil kredensial tersebut pada wireshark dengan hasil dari telnetnya tersebut. Hal ini terjadi karena Telnet secara default beroperasi dalam mode character-at-a-time, di mana setiap penekanan tombol pada keyboard langsung dikirim sebagai satu paket TCP individual ke server (bukan di-buffer per baris seperti kebanyakan protokol modern)
+Kelemahan dari telnet itu sendiri adalah pada saat kita memasukkan akun: phantom_user dengan pwnya: `ada_seorang_pria_lokal_menikahi_pohon_saw17` maka ketika kita pasang capture tersebut dan menghubungkan ke wiresharknya, semua aktivitas seperti akun dan passwordnya itu terpampang jelas tanpa adanya enkripsi yang bisa menyamarkan kredensial ini sehingga seseorang bisa memanfaatkan hal ini dan langsung mengambil kredensial tersebut pada wireshark dengan hasil dari telnetnya tersebut. Hal ini terjadi karena Telnet secara default beroperasi dalam mode character-at-a-time, di mana setiap penekanan tombol pada keyboard langsung dikirim sebagai satu paket TCP individual ke server (bukan di-buffer per baris seperti kebanyakan protokol modern). Erm actually saya gk baca soalnya buat pwnya so bakal ada revisi disini...
 
 12. Alice mencurigai Knights menjalankan beberapa layanan rahasia di node-nya. Lakukan pemindaian port dari node Alice ke node Knights menggunakan Netcat (nc) untuk memeriksa port 22 (SSH) dan 80 (HTTP) dalam keadaan terbuka, serta port rahasia 7777 dalam keadaan tertutup. Analisis di Wireshark perbedaan TCP Flag yang dikembalikan antara port terbuka (SYN-ACK) dengan port tertutup (RST-ACK).
 
