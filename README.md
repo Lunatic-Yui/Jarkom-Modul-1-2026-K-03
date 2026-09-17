@@ -4,8 +4,8 @@
 
 | Nama                      | NRP        |
 | ------------------------- | ---------- |
-| Yovi Prayudya Rizky Ramadhani       | 5027251107 |
-| Dafa Ridho Zhafif  | 5027251129 |
+| ...       | ... |
+| ...  | ... |
 
 ## Laporan
 
@@ -325,11 +325,95 @@ Sama juga dalam screenshot yang sama xD, bersebelahan sebenernya `0xc31c`
 
 `What is the USB device address assigned to the keyboard?`
 
-...
+untuk menjawab ini, kita bisa melihatnya pada
+
+![image](./assets/ctf-15/question4.png)
+
+Sebenernya disini saya coba-coba sih mulai dari 0 sampai 7 dan jawaban yang benarnya adalah 7 so yeah...
 
 `What is the secret message decoded from the captured keystrokes?`
 
-...
+Nah untuk ini jawabannya berada di
+
+![image](./assets/ctf-15/question5.png)
+
+Nah untuk itu membutuhkan script untuk bisa mendecodekan. Berikut scriptnya 
+
+```sh
+#!/bin/bash
+# ============================================
+# USB HID Keystroke Decoder
+# Usage: ./decode_hid.sh <file.pcap>
+# Requires: tshark
+# ============================================
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <file.pcap>"
+    exit 1
+fi
+
+PCAP="$1"
+
+if [ ! -f "$PCAP" ]; then
+    echo "Error: file '$PCAP' not found"
+    exit 1
+fi
+
+tshark -r "$PCAP" -Y "usb.capdata" -T fields -e usb.capdata 2>/dev/null | awk '
+BEGIN {
+    # Keycode -> lowercase char mapping (USB HID Usage Table)
+    map["04"]="a"; map["05"]="b"; map["06"]="c"; map["07"]="d";
+    map["08"]="e"; map["09"]="f"; map["0a"]="g"; map["0b"]="h";
+    map["0c"]="i"; map["0d"]="j"; map["0e"]="k"; map["0f"]="l";
+    map["10"]="m"; map["11"]="n"; map["12"]="o"; map["13"]="p";
+    map["14"]="q"; map["15"]="r"; map["16"]="s"; map["17"]="t";
+    map["18"]="u"; map["19"]="v"; map["1a"]="w"; map["1b"]="x";
+    map["1c"]="y"; map["1d"]="z";
+    map["1e"]="1"; map["1f"]="2"; map["20"]="3"; map["21"]="4";
+    map["22"]="5"; map["23"]="6"; map["24"]="7"; map["25"]="8";
+    map["26"]="9"; map["27"]="0";
+    map["28"]="\n"; map["2c"]=" "; map["2d"]="-"; map["2e"]="=";
+    map["36"]=","; map["37"]=".";
+
+    # Shifted versions
+    shiftmap["1e"]="!"; shiftmap["1f"]="@"; shiftmap["20"]="#";
+    shiftmap["21"]="$"; shiftmap["22"]="%"; shiftmap["23"]="^";
+    shiftmap["24"]="&"; shiftmap["25"]="*"; shiftmap["26"]="(";
+    shiftmap["27"]=")"; shiftmap["2d"]="_"; shiftmap["2e"]="+";
+    shiftmap["36"]="<"; shiftmap["37"]=">";
+}
+{
+    # each line = 16 hex chars = 8 bytes, colon or plain hex depending on tshark version
+    gsub(":", "", $0)
+    line = tolower($0)
+    if (length(line) < 16) next
+
+    modifier = substr(line, 1, 2)
+    keycode  = substr(line, 5, 2)
+
+    if (keycode == "00") next   # key-up event, skip
+
+    shift = (modifier == "02" || modifier == "20")
+
+    if (keycode in map) {
+        ch = map[keycode]
+        if (shift) {
+            if (keycode in shiftmap) {
+                ch = shiftmap[keycode]
+            } else {
+                ch = toupper(ch)
+            }
+        }
+        printf "%s", ch
+    }
+}
+END { print "" }
+'
+```
+
+Hasilnya seperti ini:
+
+![image](./assets/ctf-15/result-decode.png)
 
 Hasilnya
 
@@ -448,3 +532,83 @@ Result:
 Yey...
 
 `What is the email address of the victim targeted by the extortionist?`
+
+untuk menjawab pertanyaan ini, kita cukup mengikuti alurnya saja. Nah disini attackernya adalah dari `darkwired.net` yang sudah masuk ke dalam jaringannya. Kemudian mengirimkan `RCPT` ke victim@protocol7.co.jp. Nah setelah tidak lama itu, ada pesan dari si attacker buat penebusannya kepada si victim@protocol7.co.jp ini yaitu pada no 86 `86	1.201874	185.234.72.19	203.0.113.100	SMTP/IMF	865	from: attacker@darkwired.net, subject: URGENT: Your Wired account has been compromised,  (text/plain) | . | DATA fragment, 2 bytes` yang menjelaskan bahwa akun wirednya ke compromised. Disini jawabannya adalah `victim@protocol7.co.jp`
+
+`What password did the extortionist claim was stolen from the victim?`
+
+Jawabannya berada di
+
+![image](./assets/ctf-19/question2-5.png)
+
+nah ketika sudah tau siapa attacker dan victimnya, kita bisa ke image tersebut dan mendapatkan beberapa informasi mulai dari password, rentang waktu, dll. Jawabannya: `pr0tocol_7_user`
+
+`What type of malware did the attacker claim infected the victim's computer?`
+
+Nah dari image sebelumnya yang part 2, maka jawabannya adalah `ransomware`
+
+`How many days deadline did the attacker give the victim to pay?`
+
+Berdasarkan image part 2nya, rentang waktunya adalah `3` hari
+
+`What is the MailClientID specified at the bottom of the extortion email?`
+
+Yang terakhir ini ada di jawaban terakhirnya
+
+`MailClientID: 7719980706`
+
+resultnya:
+
+![image](./assets/ctf-19/result.png)
+
+(ini teman sekelompok saya yang kerjain sampai dapet yang benar)
+
+20. Untuk rencana pamungkasnya, Eiri menyembunyikan komunikasi malware di balik saluran terenkripsi TLS. Namun Alice telah menyediakan file keylog untuk mendekripsi lalu lintas data tersebut. Analisis file capture wired_tls_decrypt.pcapng bersama keyslogfile.txt untuk mengidentifikasi versi protokol TLS yang dinegosiasikan, nama domain (SNI) yang diakses, alamat IP server HTTPS penyerang, User-Agent yang digunakan, serta HTTP request method dan path yang tersembunyi di dalam sesi dekripsi. Validasi temuan kalian pada socket server: ([link file](https://drive.google.com/file/d/1F7xN3ydIrA-pZaCb32MGseVeHKt-D_qZ/view)) nc [IP_Group] 3407
+
+last but not least...
+
+`What specific TLS protocol version was negotiated for the encrypted communication?`
+
+untuk versinya bisa terjawab dengan
+
+![image](./assets/ctf-20/question1.png)
+
+yaitu `TLSv1.2` atau kalau iseng bisa menjawab punyanya example `Format: string (e.g. TLSv1.2)`
+
+`What domain name (SNI / Host) was requested by the client during the TLS handshake?`
+
+Untuk menjawab ini terdapat di awal yaitu `example.com`. Kurang lebih letaknya di
+
+![image](./assets/ctf-20/question2-3.png)
+
+`What is the IP address of the HTTPS server?`
+
+Ini juga sama dengan menjawab berdasarkan gambar sebelumnya yaitu
+
+![image](./assets/ctf-20/question2-3.png)
+
+jadi jawabannya `93.184.216.34`
+
+`What User-Agent string was used by the client during the decrypted HTTP session?`
+
+Nah untuk menjawab ini diberikan 1 file lagi yaitu `keyslogfile` yang bakal memunculkan 
+
+![image](./assets/ctf-20/question4-5.png)
+
+nah menjawabanya ada di bagian
+
+![image](./assets/ctf-20/question4.png)
+
+dengan melihat `user-agent`nya `curl/7.62.0`
+
+`What HTTP request method and path was sent in the decrypted request?`
+
+Berada di
+
+![image](./assets/ctf-20/question4-5.png)
+
+yaitu methodnya adalah `HEAD`
+
+Result:
+
+![image](./assets/ctf-20/result.png)
