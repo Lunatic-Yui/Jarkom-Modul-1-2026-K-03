@@ -261,3 +261,192 @@ Nah jadi yang membedakan antara telnet dan ssh adalah telnet itu langsung memapa
 
 nah setiap paketnya itu isinya tersebut di enkripsi jadinya orang yang ingin melakukan sniffing tersebut tidak langsung dapat melainkan hanya berisi teks enkripsi dari isi pesannya tersebut. Selanjutnya pada capture terlihat proses Protocol Version Exchange (SSH-2.0-OpenSSH_10.2 dikirim oleh client dan server), diikuti oleh Key Exchange Init dan Diffie-Hellman Key Exchange Reply, New Keys yang menandakan negosiasi kunci enkripsi sebelum sesi komunikasi dimulai.
 
+14. Setelah gagal mengakses FTP, Eiri melancarkan serangan brute-force terhadap form login web Alice. Analisis file capture wired_bruteforce.pcapng untuk mengidentifikasi alamat IP penyerang, target IP beserta port yang diserang, password user lain_admin yang berhasil ditembus, serta web server software dan versi yang dilaporkan pada response header. Validasi temuan kalian pada socket server:
+([link file](https://drive.google.com/drive/folders/1-MloxOyGauBYglc6TKTQ84VeILvJjjG2)) nc [IP_Group] 3401
+
+Untuk ip_group saya: 10.4.89.246 jadi mari kita connectkan
+
+ternyata hasilnya:
+
+![image](./assets/ctf-14/ctf-choey-14.png)
+
+Challs ini adalah challs forensic pada ctf seperti umumnya. Dengan membaca buku panduan dari rutkidinfo 101 
+
+Pertanyaan pertama:
+
+`What is the IP address of the attacker performing the brute force attack?`
+
+Untuk jawaban sendiri terdapat pada perulangan dari POSTnya jadi menggunakan command filter:
+
+`http.header.method == "POST"`
+
+hasilnya seperti ini
+
+![image](./assets/ctf-14/result-1.png)
+
+nah untuk menjawab pertanyaannya, ipnya itu: source ip addressnya yaitu `172.26.7.50`. Lanjut
+
+`What is the target IP and port being attacked?`
+
+Untuk menjawab pertanyaan berikut ada di gambar yaitu: `172.26.7.100`. Selanjutnya untuk port bisa dilihat pada `Host: 172.26.7.100:8080\r\n` jadi jawabannya: 172.26.7.100:8080
+
+`What is the password found for the user lain_admin?`
+
+Untuk jawabnya tersebut, kita bisa menggunakan filter: `http.response.code` dan cari responsenya adalah `200 OK`. Jika ketemu responsenya maka reqnya itu sebelumnya
+
+![image](./assets/ctf-14/check-status.png)
+
+Jawabannya berada di POST /login.php dengan password `Value: wired_pr0tocol_7` -> `wired_pr0tocol_7`
+
+`What is the web server software and version reported in the response header?` 
+
+untuk jawab ini ada di image yang saya warna birukan
+
+![image](./assets/ctf-14/last-answer.png)
+
+jadi hasilnya:
+
+![image](./assets/ctf-14/result.png)
+
+15. Eiri menyusup ke ruang server dan memasang perangkat keyboard USB berbahaya pada node Alice. Buka file capture wired_usb_hid.pcap, identifikasi Vendor ID dan Product ID perangkat USB dari deskriptor USB, alamat nomor device USB, serta pesan rahasia yang berhasil dicuri dari keystroke. Validasi temuan kalian pada socket server:
+([link file](https://drive.google.com/drive/folders/1oAPzN9IEN0264_LlvGnl_CsIiYh-Hp8w)) nc [IP_Group] 3402 
+
+Seperti biasa ctf
+
+`What is the Vendor ID of the captured USB HID device?`
+
+Untuk menjawab pertanyaan ini, saya search kepada documentation wireshark dan menemukan 1 yang membahas tentang [usbhid](https://www.wireshark.org/docs/dfref/u/usbhid.html). Disitu juga tertulis `usbhid.data.vendor	Vendor Data	Byte sequence	3.4.0 to 4.6.8`. Maka dengan seperti itu kita bisa memfilternya dengan `usb.idVendor` dan muncul 1 `0x046d`
+
+![image](./assets/ctf-15/idvendor.png)
+
+Lanjut: `What is the Product ID of the captured USB HID device?`
+
+Sama juga dalam screenshot yang sama xD, bersebelahan sebenernya `0xc31c`
+
+![imge](./assets/ctf-15/idvendor.png)
+
+`What is the USB device address assigned to the keyboard?`
+
+...
+
+`What is the secret message decoded from the captured keystrokes?`
+
+...
+
+Hasilnya
+
+![image](./assets/ctf-15/result.png)
+
+16. Eiri meletakkan file malware di server. Dari file capture wired_ftp_theft.pcap, lakukan analisis lalu lintas FTP untuk mengidentifikasi alamat IP server FTP penyerang, banner software FTP yang digunakan, kredensial login penyerang, serta ukuran (size in bytes) dari file malware knights_payload.exe yang diunduh. Validasi temuan kalian pada socket server:
+([link file](https://drive.google.com/drive/folders/1qBeAXVx1MG14L0jzGefqs3t8qO8VRMmb)) nc [IP_Group] 3403
+
+Seperti biasa
+
+`What is the IP address of the FTP server used to download the malware?`
+
+jawabannya: `198.51.100.7`
+
+![image](./assets/ctf-16/question-1.png)
+
+Sebenernya tinggal cari responsenya 200 atau `welcome`. Lalu untuk menghilangkan beberapa noise menggunakan filter: `ftp` seperti itu. Selanjutnya
+
+`What FTP server software banner is returned upon connection?`
+
+Untuk menjawab ini, masih pada di tempat yang sama. Dia menggunakan `vsftpd 3.0.5` di akhir kata
+
+![image](./assets/ctf-16/question-1.png)
+
+`What credential did the attacker use to log in to the FTP server?`
+
+Sebenernya dari filter `ftp` sudah dapat passwordnya yaitu `Request: PASS N4v1_s3cur3_2026` dan responsenya: `72	0.601178	198.51.100.7	10.7.3.50	FTP	63	Response: 230 Login successful.`. Jadi passwordnya adalah N4v1_s3cur3_2026. Untuk usernya ada di sebelumnya memasukan password yaitu `66	0.600544	10.7.3.50	198.51.100.7	FTP	60	Request: USER knights_agent` dan responsenya adalah `68	0.600544	198.51.100.7	10.7.3.50	FTP	74	Response: 331 Please specify the password.`. Jadi jawaban untuk pertanyaan ini: `knights_agent:N4v1_s3cur3_2026`
+
+![image](./assets/ctf-16/user:pw.png)
+
+`What is the size in bytes of the malware file (knights_payload.exe) requested via FTP?`
+
+Nah untuk ini sebenernya sudah diajarkan bagaimana si ftp terkirim dengan berapa byte. Jadi dengan filter `ftp.request.command == "RETR"` akan memunculkan `knights_payload.exe` yang mana ini adalah malwarenya. Setelah kita tau nama payloadnya, kita bisa menghapus filternya dan mencari responsenya. Jadi jawabannya adalah `524288`
+
+![image](./assets/ctf-16/last-answer.png)
+
+Resultnya (tidak oneshot sayangnya :<):
+
+![image](./assets/ctf-16/result.png)
+
+17. Alice membuat halaman web di node-nya. Eiri memanfaatkan celah untuk mengunduh payload berbahaya ke sistem Alice. Analisis file capture wired_http_c2.pcap untuk mengidentifikasi nama domain (Host) tempat malware diunduh, alamat IP server penyerang, nama file executable malware yang diunduh, serta kode status HTTP yang dikembalikan. Validasi temuan kalian pada socket server:
+([link file](https://drive.google.com/drive/folders/1iPYESj5AN-uXYXfD2Wo2cRrm_Rigr_D6)) nc [IP_Group] 3404
+
+Ctf again... (how many is this :>)
+
+`What is the domain name (Host) where the suspicious files were downloaded from?`
+
+Jujur ini jawabannya jadi 1 semua (kecuali responsenya). Gk expect also difnya `hard` jadi mungkin... oke lanjut aja. Untuk dapatkan domainnya suspicious filesnya tinggal cari nama filenya dan juga mendapatkan requestnya yaitu menggunakan `GET`. Jadi filternya adalah `http.request.method == "GET"` dan muncul 3
+
+![image](./assets/ctf-17/question1-3.png)
+
+Nah karena ada 3, malware "biasanya" nama filenya adalah `exe` type yang berarti membutuhkan eksekusi jadi tinggal click yang terakhir dan nama domainnya adalah `Host: wired-update.net\r\n`
+
+`What is the IP address of the web server hosting the malicious files?`
+
+Dengan menggunakan screenshot yang sama, hasilnya
+
+![image](./assets/ctf-17/question1-3.png)
+
+lalu ambil `destination` dan hasilnya adalah `203.0.113.42`
+
+`What is the filename of the executable malware payload downloaded by the client?`
+
+(harusnya ini pertanyaan pertama atau tidak digabung but whatever assistant actually.) Oke untuk menjawab ini sebenernya mudah yaitu dengan menjawab pertanyaan pertama `exe` maka hasil nama filenya adalah `navi_agent.exe` seperti itu dan juga menggunakan screenshot yang sama juga.
+
+`What is the HTTP status response code returned when downloading navi_agent.exe?`
+
+simple saja `200`
+
+![image](./assets/ctf-17/last.png)
+
+Result:
+
+![image](./assets/ctf-17/result.png)
+
+18. Eiri mengubah taktik penyerangan dengan menanamkan file malware menggunakan protokol file sharing SMB. Analisis file capture wired_smb_transfer.pcapng untuk mengidentifikasi nama protokol jaringan yang dieksploitasi, IP pengirim dan penerima, folder tujuan penyimpanan malware pada sistem korban, serta nama file executable malware yang ditransfer. Validasi temuan kalian pada socket server:
+([link file](https://drive.google.com/file/d/1XBtKWtNM_RrSBTp2e3O5vBdiklcPNsKs/view)) nc [IP_Group] 3405
+
+Too much malware ctf incident response wok
+
+`What network file sharing protocol was used to transfer the malware to the victim?`
+
+Seperti biasa, malware -> cari saja nama file berakhirannya `exe`. Untuk menjawab ini, lihat metadata dan jawabannya adalah `SMB2`. Jadi `SMB2` (source: [smb2 - wireshark](https://wiki.wireshark.org/SMB2)) adalah sebuah protocol baru dari windows agar bisa `filesharing` kepada host yang windows juga. Nah karena bisa `filesharing` inilah yang bisa menyebabkan attacker menanamkan malware dan melewati `windows defender`nya. Pertama kali diperkenalkannya adalah di `windows 8`. Jawabannya: `SMB2`
+
+![image](./assets/ctf-18/question1-5.png)
+
+`What is the IP address of the source host delivering the malware?`
+
+![image](./assets/ctf-18/question1-5.png)
+
+Untuk pertanyaan ini sebenernya menggunakan ip yang sama. Lalu cara mendapatkan source dari host ipnya berapa tinggal check `source`nya yang dikirim yaitu `10.7.3.100`. 
+
+`What is the IP address of the victim host receiving the malware?`
+
+![image](./assets/ctf-18/question1-5.png)
+
+Pertanyaan sebelumnya adalah source dari ip address yang mengirim malwarenya, sekarang host yang kedapatan malwarenya yaitu `destination` dengan ip address `10.7.1.50`
+
+`What target share or directory on the victim was the malware written to?`
+
+![image](./assets/ctf-18/question1-5.png)
+
+Masih pakai screenshot yang sama dan foldernya itu berada di `System32/<malware>.exe`. Kurang lebih seperti berikut `16	0.006049	10.7.3.100	10.7.1.50	SMB2	230	Create Request, File: System32\wired_trojan_payload.exe`
+
+`What is the filename of the executable malware transferred?`
+
+Langsung saja dari jawaban no 4: `wired_trojan_payload.exe`
+
+Result:
+
+![image](./assets/ctf-18/result.png)
+
+19. Eiri meneror jaringan dengan mengirimkan email pemerasan melalui protokol SMTP tanpa enkripsi. Analisis file capture wired_smtp_threat.pcap pada stream TCP terkait, identifikasi alamat email korban yang ditargetkan, password korban yang diklaim bocor oleh penyerang, jenis malware yang diinfeksikan, batas waktu (dalam hari) yang diberikan, serta MailClientID yang tercantum pada pesan. Validasi temuan kalian pada socket server:
+([link file](https://drive.google.com/drive/folders/1RAW0cMoGDDStPyFHeJ_0t9kkoLGBsCmH)) nc [IP_Group] 3406
+
+Yey...
+
+`What is the email address of the victim targeted by the extortionist?`
