@@ -183,3 +183,25 @@ sebelum kita lftp pakai akun mika di node mika
 
 ![image](./assets/isi_manifesto.png)
 
+hasilnya pada no 9:
+
+![image](./assets/result-9.png)
+
+10. Knights melancarkan uji ketahanan koneksi ke server Chisa untuk menguji latensi jaringan The Wired. Kirimkan paket ping dari node Knights ke node Chisa dengan payload khusus 128 bytes dan interval 0.3 detik sebanyak 77 paket (ping -c 77 -s 128 -i 0.3 <IP_Chisa>). Buka Wireshark, catat nilai ICMP Type dan Code untuk Echo Request vs Echo Reply, serta analisis packet loss dan RTT (min/avg/max).
+
+untuk case ini, saya tidak mempunyai packet loss jadi result pada pcapnya:
+
+[pcap](./artefak-pcap/result-10.pcapng)
+
+image:
+
+![image](./assets/result-10.png)
+
+Untuk hasilnya:
+
+| item | result |
+| -------- | -------- |
+| ICMP Echo Request | (Type 8, Code 0)	77 paket |
+| ICMP Echo Reply | (Type 0, Code 0)	77 paket|
+| Packet loss | 0% |
+| RTT min/avg/max/mdev | 0.302 / 0.672 / 1.601 / 0.202 ms |
