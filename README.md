@@ -106,7 +106,7 @@ ini adalah sebelum terjadi restart
 
 ini adalah setelah saya merestart nodenya secara tiba-tiba
 
-nah commandnya kan ada 2, `ip -br a` dan `iptables -t nat -L -v -n`. Nah untuk yang `iptables -t nat -L -v -n` ini saya mencoba mencari informasinya dari [medium](https://medium.com/skilluped/what-is-iptables-and-how-to-use-it-781818422e52) bahwasanya iptables itu seperti sebelumnya adalah sebuah command line utility firewall agar bisa mengontrol traffic sekaligus mengamankan paket internetnya tersebut. Nah commandnya terdiri dari beberapa macam yaitu `-t nat` untuk mentranslate dari iptables (network address translation) itu bisa sharing single public ip buat access ke internet. `-L` untuk listing, `-v` untuk verbose dan terakhir `-n` untuk numeric output. Informasinya saya baca dari [medium - iptables](https://medium.com/skilluped/what-is-iptables-and-how-to-use-it-781818422e52). dan untuk `ip -br a` ...
+nah commandnya kan ada 2, `ip -br a` dan `iptables -t nat -L -v -n`. Nah untuk yang `iptables -t nat -L -v -n` ini saya mencoba mencari informasinya dari [medium](https://medium.com/skilluped/what-is-iptables-and-how-to-use-it-781818422e52) bahwasanya iptables itu seperti sebelumnya adalah sebuah command line utility firewall agar bisa mengontrol traffic sekaligus mengamankan paket internetnya tersebut. Nah commandnya terdiri dari beberapa macam yaitu `-t nat` untuk mentranslate dari iptables (network address translation) itu bisa sharing single public ip buat access ke internet. `-L` untuk listing, `-v` untuk verbose dan terakhir `-n` untuk numeric output. Informasinya saya baca dari [medium - iptables](https://medium.com/skilluped/what-is-iptables-and-how-to-use-it-781818422e52). dan untuk `ip -br a` menampilkan ringkasan status seluruh interface jaringan secara singkat (brief), meliputi nama interface, status (UP/DOWN), dan alamat IP yang terpasang sehingga berguna untuk verifikasi cepat apakah konfigurasi IP masih sesuai setelah restart.
 
 6. Mika mencurigai adanya anomali traffic pada segmen jaringannya. Jalankan generator traffic berikut ([link file](https://drive.google.com/drive/folders/1ZjFvWIjvAQAjE9pPthm7V_bGyaSt93lY)) pada node Mika, lalu lakukan packet sniffing menggunakan Wireshark pada interface node Mika. Terapkan display filter khusus untuk menyaring paket yang berprotokol DNS atau ICMP. Tunjukkan screenshot hasil filter beserta ringkasan paket yang lolos
 
@@ -146,6 +146,8 @@ wait
 echo "[*] Traffic generation complete."
 echo "[*] Check Wireshark for captured packets."
 ```
+
+Dari hasil filter dns || icmp, tercatat 19 paket pada window capture ini, terdiri dari 4 paket ICMP (2 Echo Request dan 2 Echo Reply, dari ping ke 8.8.8.8 dan 1.1.1.1) dan 15 paket DNS (query dan response A/AAAA untuk domain example.com, cloudflare.com, its.ac.id, github.com, dan google.com).
 
 7. Chisa memutuskan mendirikan FTP Server pada node miliknya dengan shared folder di /var/wired/data. Terapkan kebijakan akses: user alice (hak akses read & write), user mika (dibatasi read-only), dan user eiri (dibatasi tanpa izin akses / blacklist). Buktikan konfigurasi dengan membuat file signal_alice.txt dari user alice, dan buktikan penolakan akses saat user eiri mencoba login.
 
@@ -187,6 +189,8 @@ hasilnya pada no 9:
 
 ![image](./assets/result-9.png)
 
+Dari node Mika, dilakukan login FTP menggunakan akun mika, lalu dokumen Protokol Tujuh (protocol7_manifesto.txt) tersebut dengan menggunakan `cat` berhasil dibaca sehingga bisa ditampilkan isi dari `protocol7_manifesto.txt` tersebut. Selanjutnya dicoba upload file baru, dan server merespons dengan 550 Permission denied, membuktikan bahwa akun mika dibatasi hanya pada akses baca (read-only).
+
 10. Knights melancarkan uji ketahanan koneksi ke server Chisa untuk menguji latensi jaringan The Wired. Kirimkan paket ping dari node Knights ke node Chisa dengan payload khusus 128 bytes dan interval 0.3 detik sebanyak 77 paket (ping -c 77 -s 128 -i 0.3 <IP_Chisa>). Buka Wireshark, catat nilai ICMP Type dan Code untuk Echo Request vs Echo Reply, serta analisis packet loss dan RTT (min/avg/max).
 
 untuk case ini, saya tidak mempunyai packet loss jadi result pada pcapnya:
@@ -205,3 +209,55 @@ Untuk hasilnya:
 | ICMP Echo Reply | (Type 0, Code 0)	77 paket|
 | Packet loss | 0% |
 | RTT min/avg/max/mdev | 0.302 / 0.672 / 1.601 / 0.202 ms |
+
+11. Buktikan kelemahan protokol Telnet dengan membuat akun phantom_user dan password wired_ghost pada layanan telnetd di node Chisa. Lakukan login Telnet dari node Eiri ke node Chisa dan tangkap sesi menggunakan Wireshark. Tunjukkan kredensial plain text melalui fitur Follow TCP Stream, serta jelaskan mengapa setiap karakter terkirim dalam paket TCP terpisah
+
+[pcap](./artefak-pcap/result-11.pcapng)
+
+untuk result credsnya sendiri
+
+```text
+akun: phantom_user
+pw: ada_seorang_pria_lokal_menikahi_pohon_saw17
+```
+
+nah untuk hasil dari wiresharknya:
+
+![image](./assets/result-pw-11.png)
+
+Kelemahan dari telnet itu sendiri adalah pada saat kita memasukkan akun: phantom_user dengan pwnya: `ada_seorang_pria_lokal_menikahi_pohon_saw17` maka ketika kita pasang capture tersebut dan menghubungkan ke wiresharknya, semua aktivitas seperti akun dan passwordnya itu terpampang jelas tanpa adanya enkripsi yang bisa menyamarkan kredensial ini sehingga seseorang bisa memanfaatkan hal ini dan langsung mengambil kredensial tersebut pada wireshark dengan hasil dari telnetnya tersebut. Hal ini terjadi karena Telnet secara default beroperasi dalam mode character-at-a-time, di mana setiap penekanan tombol pada keyboard langsung dikirim sebagai satu paket TCP individual ke server (bukan di-buffer per baris seperti kebanyakan protokol modern)
+
+12. Alice mencurigai Knights menjalankan beberapa layanan rahasia di node-nya. Lakukan pemindaian port dari node Alice ke node Knights menggunakan Netcat (nc) untuk memeriksa port 22 (SSH) dan 80 (HTTP) dalam keadaan terbuka, serta port rahasia 7777 dalam keadaan tertutup. Analisis di Wireshark perbedaan TCP Flag yang dikembalikan antara port terbuka (SYN-ACK) dengan port tertutup (RST-ACK).
+
+Sebelum saya melakukannya, saya setup terlebih dahulu pada node knights. Untuk setupnya
+
+![image](./assets/setup-knights.png)
+
+Setelah itu saya ke node alice dan sebelum melakukan `nc`, saya capture terlebih dahulu menggunakan wireshark. Hasilnya seperti berikut:
+
+[pcap](./artefak-pcap/result-12.pcapng)
+
+![image](./assets/result-pcap-12.png)
+
+`perbedaan port terbuka (SYN-ACK) dengan port tertutup (RST-ACK)`. Untuk bagian ini: Pada port yang terbuka, server merespons dengan flag SYN-ACK (SYN=1, ACK=1), menandakan kesediaan menerima koneksi. Sebaliknya, pada port yang tertutup, server merespons dengan flag RST-ACK (RST=1, ACK=1), yang menunjukkan bahwa koneksi ditolak karena tidak ada proses/aplikasi yang mendengarkan (listening) pada port tersebut
+
+13. Lain memerintahkan agar administrasi jarak jauh menggunakan SSH secara aman tanpa password. Install OpenSSH server pada node Knights, buat pasangan kunci SSH (ssh-keygen) pada node Mika untuk user mika_admin, dan konfigurasikan public key authentication (PasswordAuthentication no). Lakukan koneksi SSH dari node Mika ke node Knights, tangkap sesi menggunakan Wireshark, identifikasi paket Protocol Version Exchange dan Key Exchange, serta jelaskan mengapa kredensial tidak terlihat dalam bentuk teks terbuka seperti pada Telnet.
+
+Untuk yang ini sedikit ada teknis. Sebelumnya saya sudah setup namun lupa saya ss jadi saya setup ulang. Berikut setupnya:
+
+![image](./assets/setup-13.png)
+
+Selanjutnya di mika seperti berikut:
+
+![image](./assets/ulang.png)
+
+Saya melakukan semua itu dengan pasang capture di wireshark (sebelum saya setup ulang ke mika) jadi hasil setup pcapnya:
+
+[pcap](./artefak-pcap/result-13.pcapng)
+
+Nah jadi yang membedakan antara telnet dan ssh adalah telnet itu langsung memaparkan kredensial tanpa ada enkripsi menjadi plaintext sedangkan ssh pada wireshark hasilnya:
+
+![image](./assets/explain-13.png)
+
+nah setiap paketnya itu isinya tersebut di enkripsi jadinya orang yang ingin melakukan sniffing tersebut tidak langsung dapat melainkan hanya berisi teks enkripsi dari isi pesannya tersebut. Selanjutnya pada capture terlihat proses Protocol Version Exchange (SSH-2.0-OpenSSH_10.2 dikirim oleh client dan server), diikuti oleh Key Exchange Init dan Diffie-Hellman Key Exchange Reply, New Keys yang menandakan negosiasi kunci enkripsi sebelum sesi komunikasi dimulai.
+
