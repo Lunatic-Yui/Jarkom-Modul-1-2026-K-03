@@ -623,3 +623,137 @@ Result:
 [soal-12](./src/src-code/soal-12/)
 [soal-13](./src/src-code/soal-13/)
 [soal-15](./src/src-code/soal-15/)
+
+## Revisi
+
+Setelah banyak kendala (hamdeh) ada revisian pada no 7 dan 13
+
+Script no 7 update:
+
+```sh
+#!/bin/sh
+apk add --no-cache shadow vsftpd
+
+adduser -D alice
+adduser -D mika
+adduser -D eiri
+
+echo "alice:licea123#" | chpasswd
+echo "mika:ikam123#" | chpasswd
+echo "eiri:riei123#" | chpasswd
+
+usermod -d /var/wired/data alice
+usermod -d /var/wired/data mika
+usermod -d /var/wired/data eiri
+
+mkdir -p /var/wired/data
+chown alice:alice /var/wired/data
+chmod 755 /var/wired/data
+
+mkdir -p /etc/vsftpd/user_conf
+
+cat > /etc/vsftpd/vsftpd.conf << 'EOF'
+local_enable=YES
+write_enable=YES
+chroot_local_user=YES
+allow_writeable_chroot=YES
+userlist_enable=YES
+userlist_file=/etc/vsftpd.userlist
+userlist_deny=YES
+user_config_dir=/etc/vsftpd/user_conf
+seccomp_sandbox=NO
+file_open_mode=0644
+EOF
+
+sed -i 's/[ \t]*$//' /etc/vsftpd/vsftpd.conf
+
+echo "eiri" > /etc/vsftpd.userlist
+echo "write_enable=NO" > /etc/vsftpd/user_conf/mika
+
+killall vsftpd 2>/dev/null
+vsftpd /etc/vsftpd/vsftpd.conf &
+```
+
+Setelah ku check, terdapat kesalahan yaitu
+
+```asm
+Chisa:~# cat -A /etc/vsftpd/vsftpd.conf
+local_enable=YES$
+write_enable=YES$
+chroot_local_user=YES$
+allow_writeable_chroot=YES$
+userlist_enable=YES $
+userlist_file=/etc/vsftpd.userlist$
+userlist_deny=YES$
+user_config_dir=/etc/vsftpd/user_conf $
+seccomp_sandbox=NO$
+file_open_mode=0644$
+Chisa:~#
+```
+
+Ada beberapa spasi ghost yang bikin error sehingga cara memperbaikinya adalah dengan menambahkan `sed -i 's/[ \t]*$//' /etc/vsftpd/vsftpd.conf` pada shell scriptnya (kalau config manual aman tapi kalau pakai script kadang kurang 1 command aja)
+
+result:
+
+![image](./assets/revisi/revisi-result7.png)
+
+![image](./assets/revisi/revisi-result7-eiri.png)
+
+![image](./assets/revisi/revisi-result7-mika.png)
+
+Begitulah
+
+Sekarang 13 script pada mika:
+
+```sh
+  GNU nano 8.7                        mika.sh
+#!/bin/sh
+apk add --no-cache openssh
+
+rm -rf ~/.ssh
+mkdir -p ~/.ssh
+
+ssh-keygen -t rsa -b 2048 -N '' -f ~/.ssh/id_rsa
+
+cat ~/.ssh/id_rsa.pub
+```
+
+Ada perubahan sedikit disini lalu juga di knights:
+
+```sh
+
+#!/bin/sh
+apk add --no-cache openssh shadow
+
+ssh-keygen -A
+adduser -D mika_admin
+echo "mika_admin:suki_13" | chpasswd
+mkdir -p /home/mika_admin/.ssh
+touch /home/mika_admin/.ssh/authorized_keys
+chown -R mika_admin:mika_admin /home/mika_admin/.ssh
+chmod 700 /home/mika_admin/.ssh
+chmod 600 /home/mika_admin/.ssh/authorized_keys
+
+sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/ssh>
+sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd>
+echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
+
+/usr/sbin/sshd
+```
+
+ada tambahan password di knights jadinya nanti bisa dimasukkan ssh keygennya seperti berikut:
+
+![image](./assets/revisi/result-13.png)
+
+hadeh....
+
+Lalu apakah sisanya ada kendala? no 8:
+
+![image](./assets/revisi/check-8.png)
+
+no 9:
+
+![image](./assets/revisi/check-9.png)
+
+Harusnya aman (scriptnya aja yg aku gk check full, jadi yaaaa itulah). Sisanya ada di penjelasan, sekian...
+
