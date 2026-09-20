@@ -706,7 +706,6 @@ Begitulah
 Sekarang 13 script pada mika:
 
 ```sh
-  GNU nano 8.7                        mika.sh
 #!/bin/sh
 apk add --no-cache openssh
 
@@ -721,7 +720,6 @@ cat ~/.ssh/id_rsa.pub
 Ada perubahan sedikit disini lalu juga di knights:
 
 ```sh
-
 #!/bin/sh
 apk add --no-cache openssh shadow
 
