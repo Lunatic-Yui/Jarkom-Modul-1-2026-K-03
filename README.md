@@ -4,7 +4,7 @@
 
 | Nama                      | NRP        |
 | ------------------------- | ---------- |
-| Yovi Prayudya Rizky Ramadhani      | 5027251129 |
+| Yovi Prayudya Rizky Ramadhani      | 5027251107 |
 | Dafa Ridho Zhafif  | 5027251129 |
 
 ## Laporan
